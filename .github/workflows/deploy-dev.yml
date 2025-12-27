@@ -65,7 +65,7 @@ jobs:
             # YAML 형식으로 출력 (값에 특수문자가 있으면 따옴표로 감싸기)
             echo "${key}: '${value}'" >> /tmp/env-vars.yaml
           done < .github/env/dev.env
-          
+
           echo "=== Generated env-vars.yaml ==="
           cat /tmp/env-vars.yaml
 
