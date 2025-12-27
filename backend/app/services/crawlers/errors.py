@@ -12,12 +12,11 @@ Crawler Error Definitions
 """
 
 from enum import Enum
-from typing import Optional
 
 
 class CrawlErrorCode(str, Enum):
     """크롤링 에러 코드"""
-    
+
     INVALID_URL_FORMAT = "INVALID_URL_FORMAT"
     EMPTY_INPUT = "EMPTY_INPUT"
     UNSUPPORTED_CONTENT = "UNSUPPORTED_CONTENT"
@@ -53,27 +52,29 @@ ERROR_HTTP_STATUS: dict[CrawlErrorCode, int] = {
 class CrawlError(Exception):
     """
     크롤링 에러 기본 클래스
-    
+
     Attributes:
         code: 에러 코드 (CrawlErrorCode)
         message: 사용자에게 표시할 메시지
         detail: 개발자용 상세 정보 (선택)
         http_status: HTTP 상태 코드
     """
-    
+
     def __init__(
         self,
         code: CrawlErrorCode,
-        message: Optional[str] = None,
-        detail: Optional[str] = None,
+        message: str | None = None,
+        detail: str | None = None,
     ):
         self.code = code
-        self.message = message or ERROR_MESSAGES.get(code, "알 수 없는 오류가 발생했습니다.")
+        self.message = message or ERROR_MESSAGES.get(
+            code, "알 수 없는 오류가 발생했습니다."
+        )
         self.detail = detail
         self.http_status = ERROR_HTTP_STATUS.get(code, 500)
-        
+
         super().__init__(self.message)
-    
+
     def to_dict(self) -> dict:
         """API 응답용 딕셔너리 변환"""
         result = {
@@ -87,8 +88,8 @@ class CrawlError(Exception):
 
 class InvalidURLError(CrawlError):
     """잘못된 URL 형식 에러"""
-    
-    def __init__(self, url: str, detail: Optional[str] = None):
+
+    def __init__(self, url: str, detail: str | None = None):
         super().__init__(
             code=CrawlErrorCode.INVALID_URL_FORMAT,
             detail=detail or f"유효하지 않은 URL: {url}",
@@ -98,15 +99,15 @@ class InvalidURLError(CrawlError):
 
 class EmptyInputError(CrawlError):
     """빈 입력 에러"""
-    
+
     def __init__(self):
         super().__init__(code=CrawlErrorCode.EMPTY_INPUT)
 
 
 class UnsupportedContentError(CrawlError):
     """지원하지 않는 콘텐츠 타입 에러"""
-    
-    def __init__(self, url: str, domain: str, reason: Optional[str] = None):
+
+    def __init__(self, url: str, domain: str, reason: str | None = None):
         super().__init__(
             code=CrawlErrorCode.UNSUPPORTED_CONTENT,
             detail=reason or f"지원하지 않는 콘텐츠 타입: {domain}",
@@ -117,7 +118,7 @@ class UnsupportedContentError(CrawlError):
 
 class NoContentError(CrawlError):
     """콘텐츠 없음 에러"""
-    
+
     def __init__(self, url: str):
         super().__init__(
             code=CrawlErrorCode.NO_CONTENT,
@@ -128,8 +129,8 @@ class NoContentError(CrawlError):
 
 class CrawlFailedError(CrawlError):
     """크롤링 실패 에러"""
-    
-    def __init__(self, url: str, reason: Optional[str] = None):
+
+    def __init__(self, url: str, reason: str | None = None):
         super().__init__(
             code=CrawlErrorCode.CRAWL_FAILED,
             detail=reason or f"크롤링 실패: {url}",
@@ -139,7 +140,7 @@ class CrawlFailedError(CrawlError):
 
 class CrawlTimeoutError(CrawlError):
     """타임아웃 에러"""
-    
+
     def __init__(self, url: str, timeout_seconds: float):
         super().__init__(
             code=CrawlErrorCode.TIMEOUT,
@@ -151,11 +152,10 @@ class CrawlTimeoutError(CrawlError):
 
 class NetworkError(CrawlError):
     """네트워크 에러"""
-    
-    def __init__(self, url: str, reason: Optional[str] = None):
+
+    def __init__(self, url: str, reason: str | None = None):
         super().__init__(
             code=CrawlErrorCode.NETWORK_ERROR,
             detail=reason or f"네트워크 오류: {url}",
         )
         self.url = url
-

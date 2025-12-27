@@ -25,7 +25,6 @@ from loguru import logger
 
 from app.core.config import settings
 
-
 # 기본 로컬 데이터 디렉토리
 DEFAULT_DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
@@ -60,7 +59,9 @@ def _get_gcs_credentials() -> service_account.Credentials | None:
         return credentials
 
     # 4. 키 파일이 없으면 None 반환 (ADC 자동 감지 사용)
-    logger.warning("GCS: 서비스 계정 키 파일을 찾을 수 없습니다. ADC 자동 감지를 시도합니다.")
+    logger.warning(
+        "GCS: 서비스 계정 키 파일을 찾을 수 없습니다. ADC 자동 감지를 시도합니다."
+    )
     return None
 
 
@@ -91,7 +92,9 @@ class StorageService(Protocol):
         """
         ...
 
-    async def save_bytes(self, path: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+    async def save_bytes(
+        self, path: str, data: bytes, content_type: str = "application/octet-stream"
+    ) -> str:
         """바이너리 데이터를 저장합니다.
 
         Args:
@@ -202,7 +205,9 @@ class LocalStorageService:
             logger.error(f"LocalStorage: JSON 로드 실패: {full_path}, error={e}")
             return None
 
-    async def save_bytes(self, path: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+    async def save_bytes(
+        self, path: str, data: bytes, content_type: str = "application/octet-stream"
+    ) -> str:
         """바이너리 데이터를 로컬 파일시스템에 저장합니다."""
         full_path = self._resolve_path(path)
         full_path.parent.mkdir(parents=True, exist_ok=True)
@@ -210,7 +215,9 @@ class LocalStorageService:
         with open(full_path, "wb") as f:
             f.write(data)
 
-        logger.debug(f"LocalStorage: 바이너리 저장 완료: {full_path} ({len(data)} bytes)")
+        logger.debug(
+            f"LocalStorage: 바이너리 저장 완료: {full_path} ({len(data)} bytes)"
+        )
         return str(full_path)
 
     async def load_bytes(self, path: str) -> bytes | None:
@@ -309,10 +316,14 @@ class GCSStorageService:
             json_str = blob.download_as_text()
             return json.loads(json_str)
         except Exception as e:
-            logger.error(f"GCS: JSON 로드 실패: gs://{self.bucket_name}/{path}, error={e}")
+            logger.error(
+                f"GCS: JSON 로드 실패: gs://{self.bucket_name}/{path}, error={e}"
+            )
             return None
 
-    async def save_bytes(self, path: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+    async def save_bytes(
+        self, path: str, data: bytes, content_type: str = "application/octet-stream"
+    ) -> str:
         """바이너리 데이터를 GCS에 저장합니다."""
         blob = self.bucket.blob(path)
         blob.upload_from_string(data, content_type=content_type)
@@ -331,7 +342,9 @@ class GCSStorageService:
         try:
             return blob.download_as_bytes()
         except Exception as e:
-            logger.error(f"GCS: 바이너리 로드 실패: gs://{self.bucket_name}/{path}, error={e}")
+            logger.error(
+                f"GCS: 바이너리 로드 실패: gs://{self.bucket_name}/{path}, error={e}"
+            )
             return None
 
     async def list_files(self, prefix: str, pattern: str = "*") -> list[str]:
@@ -410,4 +423,3 @@ def get_storage_service() -> StorageService:
 def is_gcs_storage() -> bool:
     """현재 스토리지 백엔드가 GCS인지 확인합니다."""
     return settings.STORAGE_BACKEND.lower() == "gcs"
-

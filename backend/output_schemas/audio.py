@@ -23,7 +23,7 @@ class NewsScript(BaseModel):
     )
     estimated_duration_sec: int = Field(
         ...,
-        ge=30,   # 최소 30초 (유연하게 허용)
+        ge=30,  # 최소 30초 (유연하게 허용)
         le=600,  # 최대 10분 (유연하게 허용)
         description="예상 분량 (초). 목표: 180초 (3분)",
     )
@@ -33,4 +33,3 @@ class NewsScript(BaseModel):
         le=5000,
         description="총 글자 수. 목표: 900~1,050자 (3분 분량)",
     )
-

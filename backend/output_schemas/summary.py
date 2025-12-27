@@ -21,4 +21,3 @@ class SummaryResult(BaseModel):
         ...,
         description="글의 주요 주제를 한 줄로 요약",
     )
-

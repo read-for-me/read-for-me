@@ -5,11 +5,10 @@ Prompt Loader
 버전 관리 및 A/B 테스트가 용이하도록 프롬프트를 파일로 분리합니다.
 """
 
-from pathlib import Path
 from functools import lru_cache
+from pathlib import Path
 
 from loguru import logger
-
 
 # 프롬프트 디렉토리 기본 경로 (backend/prompts/)
 PROMPTS_DIR = Path(__file__).parent.parent.parent / "prompts"
@@ -41,11 +40,9 @@ class PromptLoader:
             FileNotFoundError: 프롬프트 파일이 없을 경우
         """
         file_path = self.base_dir / version / f"{name}.md"
-        
+
         if not file_path.exists():
-            raise FileNotFoundError(
-                f"프롬프트 파일을 찾을 수 없습니다: {file_path}"
-            )
+            raise FileNotFoundError(f"프롬프트 파일을 찾을 수 없습니다: {file_path}")
 
         content = file_path.read_text(encoding="utf-8")
         logger.debug(f"프롬프트 로드 완료: {file_path}")
@@ -82,4 +79,3 @@ def format_prompt(version: str, name: str, **kwargs) -> str:
     """
     template = get_prompt(version, name)
     return template.format(**kwargs)
-

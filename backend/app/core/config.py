@@ -1,16 +1,17 @@
 import json
-from typing import List, Union
+
 from pydantic import AnyHttpUrl, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str
     VERSION: str
     API_V1_STR: str
-    
+
     # CORS 설정: 콤마로 구분된 문자열이나 리스트 모두 처리 가능하도록 검증
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
-    
+    BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = []
+
     # GeekNews 원본 외부 링크 크롤링 설정
     # True: 원본 웹페이지 콘텐츠도 함께 크롤링
     # False: GeekNews 아티클만 크롤링
@@ -56,7 +57,7 @@ class Settings(BaseSettings):
     GCS_SIGNED_URL_EXPIRY_MINUTES: int = 60
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str] | str:
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str] | str:
         if isinstance(v, str):
             # JSON 배열 형태인 경우 파싱
             if v.startswith("["):
@@ -72,9 +73,8 @@ class Settings(BaseSettings):
 
     # .env 파일 위치 지정 (현재 파일 기준 상위 디렉토리 탐색 등)
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=True
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True
     )
+
 
 settings = Settings()

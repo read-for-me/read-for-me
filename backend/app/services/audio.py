@@ -24,11 +24,11 @@ from loguru import logger
 from openai import AsyncOpenAI
 from pydub import AudioSegment
 from tenacity import (
+    RetryError,
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
-    RetryError,
 )
 
 from app.core.config import settings
@@ -80,7 +80,9 @@ def _get_credentials() -> service_account.Credentials | None:
         return credentials
 
     # 4. 키 파일이 없으면 None 반환 (ADC 자동 감지 사용)
-    logger.warning("서비스 계정 키 파일을 찾을 수 없습니다. ADC 자동 감지를 시도합니다.")
+    logger.warning(
+        "서비스 계정 키 파일을 찾을 수 없습니다. ADC 자동 감지를 시도합니다."
+    )
     return None
 
 
@@ -163,7 +165,7 @@ class AudioService:
         self.tts_voice = settings.TTS_VOICE
         self.tts_silence_padding_ms = settings.TTS_SILENCE_PADDING_MS
         self.tts_instructions = settings.TTS_INSTRUCTIONS
-        
+
         # OpenAI 클라이언트 (비동기)
         # settings에서 API 키를 명시적으로 전달 (pydantic-settings가 .env에서 로드)
         self.openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
@@ -183,20 +185,20 @@ class AudioService:
     ) -> str:
         """
         GeekNews 요약 콘텐츠와 원본 아티클 콘텐츠를 병합합니다.
-        
+
         original_content가 있으면 두 소스를 구분하여 병합하고,
         없으면 기존 content만 반환합니다.
-        
+
         Args:
             content: 기본 콘텐츠 (GeekNews 웹페이지 본문)
             original_content: 원본 외부 링크 콘텐츠 (선택)
-            
+
         Returns:
             병합된 콘텐츠 문자열
         """
         if not original_content or not original_content.strip():
             return content
-        
+
         # 두 소스를 구분하여 병합
         merged = f"""## GeekNews 요약/코멘트
 
@@ -205,7 +207,7 @@ class AudioService:
 ## 원본 아티클
 
 {original_content.strip()}"""
-        
+
         return merged
 
     @retry(
@@ -218,13 +220,13 @@ class AudioService:
     async def _invoke_llm(self, prompt: str) -> NewsScript:
         """
         LLM을 호출하여 뉴스 스크립트를 생성합니다. (재시도 로직 포함)
-        
+
         Args:
             prompt: 스크립트 생성 프롬프트
-            
+
         Returns:
             NewsScript: 생성된 뉴스 스크립트
-            
+
         Raises:
             Exception: 최대 재시도 후에도 실패 시
         """
@@ -264,7 +266,11 @@ class AudioService:
 
         logger.debug(
             f"스크립트 생성 요청: 콘텐츠 길이={len(content)}자"
-            + (f", 원본 콘텐츠 길이={len(original_content)}자" if original_content else "")
+            + (
+                f", 원본 콘텐츠 길이={len(original_content)}자"
+                if original_content
+                else ""
+            )
         )
 
         # LLM 호출 (비동기, 재시도 로직 포함)
@@ -278,7 +284,9 @@ class AudioService:
             return result
         except RetryError as e:
             # 모든 재시도가 실패한 경우
-            logger.error(f"스크립트 생성 실패 (최대 {MAX_RETRY_ATTEMPTS}회 재시도 후): {e}")
+            logger.error(
+                f"스크립트 생성 실패 (최대 {MAX_RETRY_ATTEMPTS}회 재시도 후): {e}"
+            )
             raise
         except Exception as e:
             logger.error(f"스크립트 생성 실패: {e}")
@@ -326,7 +334,11 @@ class AudioService:
 
         logger.debug(
             f"스크립트 생성 요청 (동기): 콘텐츠 길이={len(content)}자"
-            + (f", 원본 콘텐츠 길이={len(original_content)}자" if original_content else "")
+            + (
+                f", 원본 콘텐츠 길이={len(original_content)}자"
+                if original_content
+                else ""
+            )
         )
 
         try:
@@ -338,7 +350,9 @@ class AudioService:
             )
             return result
         except RetryError as e:
-            logger.error(f"스크립트 생성 실패 (최대 {MAX_RETRY_ATTEMPTS}회 재시도 후): {e}")
+            logger.error(
+                f"스크립트 생성 실패 (최대 {MAX_RETRY_ATTEMPTS}회 재시도 후): {e}"
+            )
             raise
         except Exception as e:
             logger.error(f"스크립트 생성 실패: {e}")
@@ -376,7 +390,11 @@ class AudioService:
 
         logger.debug(
             f"스트리밍 스크립트 생성 요청: 콘텐츠 길이={len(content)}자"
-            + (f", 원본 콘텐츠 길이={len(original_content)}자" if original_content else "")
+            + (
+                f", 원본 콘텐츠 길이={len(original_content)}자"
+                if original_content
+                else ""
+            )
         )
 
         try:
@@ -442,12 +460,16 @@ class AudioService:
         paragraphs: list[str] = []
 
         # [제목] 파싱
-        title_match = re.search(r"\[제목\]\s*\n(.+?)(?:\n\n|\n\[|$)", full_content, re.DOTALL)
+        title_match = re.search(
+            r"\[제목\]\s*\n(.+?)(?:\n\n|\n\[|$)", full_content, re.DOTALL
+        )
         if title_match:
             title = title_match.group(1).strip()
 
         # [스크립트] 파싱 - 빈 줄로 구분된 문단 추출
-        script_match = re.search(r"\[스크립트\]\s*\n([\s\S]*?)$", full_content, re.DOTALL)
+        script_match = re.search(
+            r"\[스크립트\]\s*\n([\s\S]*?)$", full_content, re.DOTALL
+        )
         if script_match:
             script_text = script_match.group(1).strip()
             # 빈 줄로 문단 분리 (연속된 빈 줄도 하나로 처리)
@@ -470,7 +492,7 @@ class AudioService:
 
         # 총 글자 수 계산
         total_characters = sum(len(p) for p in paragraphs)
-        
+
         # 예상 시간 계산 (한국어 평균 분당 300자 기준)
         estimated_duration_sec = int(total_characters / 300 * 60)
 
@@ -515,7 +537,7 @@ class AudioService:
             response_format="mp3",
         ) as response:
             audio_bytes = await response.read()
-        
+
         return audio_bytes
 
     def _merge_audio_chunks(
@@ -614,11 +636,14 @@ class AudioService:
         # StorageService로 저장
         if storage is None:
             from app.services.storage import get_storage_service
+
             storage = get_storage_service()
 
         # 저장 경로
         path = f"users/{user_id}/audio/{article_id}.mp3"
-        saved_path = await storage.save_bytes(path, merged_audio, content_type="audio/mpeg")
+        saved_path = await storage.save_bytes(
+            path, merged_audio, content_type="audio/mpeg"
+        )
 
         file_size_bytes = len(merged_audio)
 
@@ -650,4 +675,3 @@ def get_audio_service() -> AudioService:
     if _audio_service is None:
         _audio_service = AudioService()
     return _audio_service
-

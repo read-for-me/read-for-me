@@ -21,17 +21,16 @@ from langchain_core.messages import AIMessageChunk
 from langchain_google_genai import ChatGoogleGenerativeAI
 from loguru import logger
 from tenacity import (
+    RetryError,
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
-    RetryError,
 )
 
 from app.core.config import settings
 from app.services.prompt_loader import format_prompt
 from output_schemas.summary import SummaryResult
-
 
 # Google Cloud 프로젝트 설정
 DEFAULT_PROJECT_ID = "gen-lang-client-0039052673"
@@ -78,7 +77,9 @@ def _get_credentials() -> service_account.Credentials | None:
         return credentials
 
     # 4. 키 파일이 없으면 None 반환 (ADC 자동 감지 사용)
-    logger.warning("서비스 계정 키 파일을 찾을 수 없습니다. ADC 자동 감지를 시도합니다.")
+    logger.warning(
+        "서비스 계정 키 파일을 찾을 수 없습니다. ADC 자동 감지를 시도합니다."
+    )
     return None
 
 
@@ -117,7 +118,7 @@ class SummaryService:
         )
         self.location = location
         self.prompt_version = prompt_version
-        
+
         # Thinking 설정: settings에서 로드 (파라미터로 오버라이드 가능)
         self.thinking_level = settings.GEMINI_THINKING_LEVEL
         if thinking_budget is not None:
@@ -170,13 +171,13 @@ class SummaryService:
     async def _invoke_llm(self, prompt: str) -> SummaryResult:
         """
         LLM을 호출하여 요약을 생성합니다. (재시도 로직 포함)
-        
+
         Args:
             prompt: 요약 프롬프트
-            
+
         Returns:
             SummaryResult: 요약 결과
-            
+
         Raises:
             Exception: 최대 재시도 후에도 실패 시
         """
@@ -189,20 +190,20 @@ class SummaryService:
     ) -> str:
         """
         GeekNews 요약 콘텐츠와 원본 아티클 콘텐츠를 병합합니다.
-        
+
         original_content가 있으면 두 소스를 구분하여 병합하고,
         없으면 기존 content만 반환합니다.
-        
+
         Args:
             content: 기본 콘텐츠 (GeekNews 웹페이지 본문)
             original_content: 원본 외부 링크 콘텐츠 (선택)
-            
+
         Returns:
             병합된 콘텐츠 문자열
         """
         if not original_content or not original_content.strip():
             return content
-        
+
         # 두 소스를 구분하여 병합
         merged = f"""## GeekNews 요약/코멘트
 
@@ -211,7 +212,7 @@ class SummaryService:
 ## 원본 아티클
 
 {original_content.strip()}"""
-        
+
         return merged
 
     async def summarize(
@@ -248,7 +249,11 @@ class SummaryService:
 
         logger.debug(
             f"요약 요청: 콘텐츠 길이={len(content)}자"
-            + (f", 원본 콘텐츠 길이={len(original_content)}자" if original_content else "")
+            + (
+                f", 원본 콘텐츠 길이={len(original_content)}자"
+                if original_content
+                else ""
+            )
         )
 
         # LLM 호출 (비동기, 재시도 로직 포함)
@@ -309,7 +314,11 @@ class SummaryService:
 
         logger.debug(
             f"요약 요청 (동기): 콘텐츠 길이={len(content)}자"
-            + (f", 원본 콘텐츠 길이={len(original_content)}자" if original_content else "")
+            + (
+                f", 원본 콘텐츠 길이={len(original_content)}자"
+                if original_content
+                else ""
+            )
         )
 
         try:
@@ -358,7 +367,11 @@ class SummaryService:
 
         logger.debug(
             f"스트리밍 요약 요청: 콘텐츠 길이={len(content)}자"
-            + (f", 원본 콘텐츠 길이={len(original_content)}자" if original_content else "")
+            + (
+                f", 원본 콘텐츠 길이={len(original_content)}자"
+                if original_content
+                else ""
+            )
         )
 
         try:
@@ -422,7 +435,9 @@ class SummaryService:
         bullet_points: list[str] = []
 
         # [주제] 파싱
-        topic_match = re.search(r"\[주제\]\s*\n(.+?)(?:\n\n|\n\[|$)", full_content, re.DOTALL)
+        topic_match = re.search(
+            r"\[주제\]\s*\n(.+?)(?:\n\n|\n\[|$)", full_content, re.DOTALL
+        )
         if topic_match:
             main_topic = topic_match.group(1).strip()
 
