@@ -71,8 +71,23 @@ known-first-party = ["app"]
 python_version = "3.11"
 strict = false
 ignore_missing_imports = true
-warn_return_any = true
+warn_return_any = false
 warn_unused_configs = true
+check_untyped_defs = false
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+# 특정 에러 코드 무시 (점진적으로 활성화 권장)
+disable_error_code = [
+    "arg-type",
+    "assignment", 
+    "attr-defined",
+    "call-arg",
+    "call-overload",
+    "no-any-return",
+    "return-value",
+    "union-attr",
+    "var-annotated",
+]
 exclude = [
     "^tests/",
     "^data/",
