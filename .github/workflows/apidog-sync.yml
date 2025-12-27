@@ -14,13 +14,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'backend/**'
-  workflow_dispatch:  # 수동 실행 허용
+      - "backend/**"
+  workflow_dispatch: # 수동 실행 허용
 
 jobs:
   sync-openapi:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,7 +28,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -52,12 +52,12 @@ jobs:
           uv run python -c "
           import json
           from app.main import app
-          
+
           openapi_schema = app.openapi()
-          
+
           with open('../openapi.json', 'w', encoding='utf-8') as f:
               json.dump(openapi_schema, f, ensure_ascii=False, indent=2)
-          
+
           print('OpenAPI spec generated successfully!')
           print(f'Endpoints: {len(openapi_schema.get(\"paths\", {}))}')
           "
@@ -79,4 +79,3 @@ jobs:
           name: openapi-spec
           path: openapi.json
           retention-days: 30
-
