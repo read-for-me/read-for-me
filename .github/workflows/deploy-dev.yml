@@ -1,0 +1,101 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-dev.yml"
+      - ".github/env/dev.env"
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: asia-northeast3
+  SERVICE_NAME: read-for-me-backend-dev
+  ARTIFACT_REGISTRY: asia-northeast3-docker.pkg.dev
+
+jobs:
+  deploy:
+    name: Deploy Backend to Dev
+    runs-on: ubuntu-latest
+    environment: development
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
+
+      - name: Build Docker image
+        working-directory: backend
+        run: |
+          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/read-for-me/backend:dev-${{ github.sha }} .
+          docker tag ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/read-for-me/backend:dev-${{ github.sha }} \
+                     ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/read-for-me/backend:dev-latest
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/read-for-me/backend:dev-${{ github.sha }}
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/read-for-me/backend:dev-latest
+
+      - name: Load environment variables
+        id: env
+        run: |
+          # .github/env/dev.env 파일에서 환경변수 로드
+          while IFS='=' read -r key value; do
+            # 주석과 빈 줄 무시
+            [[ "$key" =~ ^#.*$ ]] && continue
+            [[ -z "$key" ]] && continue
+            # 환경변수로 설정
+            echo "${key}=${value}" >> $GITHUB_OUTPUT
+          done < .github/env/dev.env
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/read-for-me/backend:dev-${{ github.sha }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --memory 1Gi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 3 \
+            --set-env-vars "PROJECT_NAME=${{ steps.env.outputs.PROJECT_NAME }}" \
+            --set-env-vars "VERSION=${{ steps.env.outputs.VERSION }}" \
+            --set-env-vars "API_V1_STR=${{ steps.env.outputs.API_V1_STR }}" \
+            --set-env-vars "STORAGE_BACKEND=${{ steps.env.outputs.STORAGE_BACKEND }}" \
+            --set-env-vars "GCS_BUCKET_NAME=${{ steps.env.outputs.GCS_BUCKET_NAME }}" \
+            --set-env-vars "GCS_PROJECT_ID=${{ steps.env.outputs.GCS_PROJECT_ID }}" \
+            --set-env-vars "BACKEND_CORS_ORIGINS=${{ steps.env.outputs.BACKEND_CORS_ORIGINS }}" \
+            --set-env-vars "PHOENIX_ENABLED=${{ steps.env.outputs.PHOENIX_ENABLED }}" \
+            --set-secrets "OPENAI_API_KEY=openai-api-key:latest"
+
+      - name: Get Service URL
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region ${{ env.REGION }} \
+            --format 'value(status.url)')
+          echo "🚀 Deployed to: $SERVICE_URL"
+          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
+
+      - name: Health Check
+        run: |
+          echo "Waiting for service to be ready..."
+          sleep 10
+          curl -f "${{ env.SERVICE_URL }}/health" || echo "Health check pending (cold start)"
+

@@ -73,7 +73,6 @@ temp/
 .cursor/
 .cursorignore
 .mcp.json
-.github/workflows/
 .playwright-mcp/
 openapi.json
 docs/
