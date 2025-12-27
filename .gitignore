@@ -68,7 +68,12 @@ temp/
 .docker/
 
 # ==============================================================================
-# Docs and Plans
+# Cursor IDE settings
 # ==============================================================================
+.cursor/
+.cursorignore
+.mcp.json
+.github/workflows/
+.playwright-mcp/
+openapi.json
 docs/
-plans/
