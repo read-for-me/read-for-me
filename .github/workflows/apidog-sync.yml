@@ -47,7 +47,7 @@ jobs:
           PROJECT_NAME: "Read-For-Me Backend"
           VERSION: "0.1.0"
           API_V1_STR: "/api/v1"
-          BACKEND_CORS_ORIGINS: "http://localhost:3000"
+          BACKEND_CORS_ORIGINS: '["http://localhost:3000"]'
         run: |
           uv run python -c "
           import json
