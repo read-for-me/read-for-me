@@ -63,15 +63,19 @@ jobs:
           "
 
       - name: Upload OpenAPI spec to Apidog
+        continue-on-error: true
         env:
           APIDOG_API_KEY: ${{ secrets.APIDOG_API_KEY }}
           APIDOG_PROJECT_ID: ${{ secrets.APIDOG_PROJECT_ID }}
         run: |
+          # OpenAPI 스펙을 Apidog 형식으로 래핑
+          jq -n --slurpfile spec openapi.json '{"input": $spec[0]}' > apidog-payload.json
+
           curl -X POST "https://api.apidog.com/v1/projects/${APIDOG_PROJECT_ID}/import-openapi" \
             -H "Authorization: Bearer ${APIDOG_API_KEY}" \
             -H "Content-Type: application/json" \
-            -d @openapi.json \
-            --fail-with-body
+            -d @apidog-payload.json \
+            --fail-with-body || echo "⚠️ Apidog sync failed (non-critical)"
 
       - name: Upload OpenAPI artifact
         uses: actions/upload-artifact@v4
