@@ -238,7 +238,9 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+    }
 
 
 # 디버깅 용: python app/main.py로 실행 시

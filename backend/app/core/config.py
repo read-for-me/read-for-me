@@ -7,8 +7,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     PROJECT_NAME: str
     VERSION: str = "0.0.1"
+    ENVIRONMENT: str = "local"
     API_V1_STR: str
-
     # CORS 설정: 콤마로 구분된 문자열이나 리스트 모두 처리 가능하도록 검증
     BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = []
 
