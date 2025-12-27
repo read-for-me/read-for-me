@@ -40,3 +40,40 @@ dev = [
 
 [tool.uvicorn]
 reload-exclude = [".venv"]
+
+# =====================
+# Ruff (Linter & Formatter)
+# =====================
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+# =====================
+# Mypy (Type Checker)
+# =====================
+[tool.mypy]
+python_version = "3.11"
+strict = false
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_configs = true
+exclude = [
+    "^tests/",
+    "^data/",
+]
