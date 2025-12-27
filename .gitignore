@@ -19,7 +19,7 @@ __pycache__/
 .Python
 .venv/
 venv/
-ENV/
+/ENV/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
