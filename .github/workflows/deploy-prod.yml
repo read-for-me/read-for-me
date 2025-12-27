@@ -74,17 +74,22 @@ jobs:
           docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/read-for-me/backend:v${{ steps.version.outputs.VERSION }}-${{ github.sha }}
           docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/read-for-me/backend:latest
 
-      - name: Load environment variables
-        id: env
+      - name: Create env-vars YAML file
         run: |
-          # .github/env/prod.env 파일에서 환경변수 로드
-          while IFS='=' read -r key value; do
+          # .github/env/prod.env를 YAML 형식으로 변환
+          echo "# Auto-generated from prod.env" > /tmp/env-vars.yaml
+          while IFS='=' read -r key value || [ -n "$key" ]; do
             # 주석과 빈 줄 무시
             [[ "$key" =~ ^#.*$ ]] && continue
             [[ -z "$key" ]] && continue
-            # 환경변수로 설정
-            echo "${key}=${value}" >> $GITHUB_OUTPUT
+            # 공백 제거
+            key=$(echo "$key" | xargs)
+            # YAML 형식으로 출력 (값에 특수문자가 있으면 따옴표로 감싸기)
+            echo "${key}: '${value}'" >> /tmp/env-vars.yaml
           done < .github/env/prod.env
+          
+          echo "=== Generated env-vars.yaml ==="
+          cat /tmp/env-vars.yaml
 
       - name: Deploy to Cloud Run
         run: |
@@ -97,14 +102,7 @@ jobs:
             --cpu 1 \
             --min-instances 0 \
             --max-instances 10 \
-            --set-env-vars "PROJECT_NAME=${{ steps.env.outputs.PROJECT_NAME }}" \
-            --set-env-vars "VERSION=${{ steps.env.outputs.VERSION }}" \
-            --set-env-vars "API_V1_STR=${{ steps.env.outputs.API_V1_STR }}" \
-            --set-env-vars "STORAGE_BACKEND=${{ steps.env.outputs.STORAGE_BACKEND }}" \
-            --set-env-vars "GCS_BUCKET_NAME=${{ steps.env.outputs.GCS_BUCKET_NAME }}" \
-            --set-env-vars "GCS_PROJECT_ID=${{ steps.env.outputs.GCS_PROJECT_ID }}" \
-            --set-env-vars "BACKEND_CORS_ORIGINS=${{ steps.env.outputs.BACKEND_CORS_ORIGINS }}" \
-            --set-env-vars "PHOENIX_ENABLED=${{ steps.env.outputs.PHOENIX_ENABLED }}" \
+            --env-vars-file /tmp/env-vars.yaml \
             --set-secrets "OPENAI_API_KEY=openai-api-key:latest"
 
       - name: Get Service URL
@@ -132,4 +130,3 @@ jobs:
           echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
           echo "| URL | ${{ env.SERVICE_URL }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Region | ${{ env.REGION }} |" >> $GITHUB_STEP_SUMMARY
-
