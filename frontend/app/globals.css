@@ -1,0 +1,218 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Anthropic-inspired warm color theme with cream background and coral accent */
+:root {
+  --background: oklch(0.98 0.008 80);
+  --foreground: oklch(0.25 0.02 50);
+  --card: oklch(0.99 0.005 80);
+  --card-foreground: oklch(0.25 0.02 50);
+  --popover: oklch(0.99 0.005 80);
+  --popover-foreground: oklch(0.25 0.02 50);
+  --primary: oklch(0.65 0.18 45);
+  --primary-foreground: oklch(0.99 0.005 80);
+  --secondary: oklch(0.94 0.015 75);
+  --secondary-foreground: oklch(0.25 0.02 50);
+  --muted: oklch(0.94 0.012 75);
+  --muted-foreground: oklch(0.50 0.02 50);
+  --accent: oklch(0.94 0.015 75);
+  --accent-foreground: oklch(0.25 0.02 50);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.99 0.005 80);
+  --border: oklch(0.90 0.015 75);
+  --input: oklch(0.92 0.012 75);
+  --ring: oklch(0.65 0.18 45);
+  --radius: 0.75rem;
+  --chart-1: oklch(0.65 0.18 45);
+  --chart-2: oklch(0.60 0.15 160);
+  --chart-3: oklch(0.70 0.15 85);
+  --chart-4: oklch(0.55 0.20 300);
+  --chart-5: oklch(0.60 0.20 20);
+  --sidebar: oklch(0.22 0.02 50);
+  --sidebar-foreground: oklch(0.98 0.008 80);
+  --sidebar-primary: oklch(0.65 0.18 45);
+  --sidebar-primary-foreground: oklch(0.98 0.008 80);
+  --sidebar-accent: oklch(0.30 0.02 50);
+  --sidebar-accent-foreground: oklch(0.98 0.008 80);
+  --sidebar-border: oklch(0.30 0.02 50);
+  --sidebar-ring: oklch(0.45 0.02 50);
+}
+
+.dark {
+  --background: oklch(0.18 0.015 50);
+  --foreground: oklch(0.95 0.01 75);
+  --card: oklch(0.20 0.015 50);
+  --card-foreground: oklch(0.95 0.01 75);
+  --popover: oklch(0.20 0.015 50);
+  --popover-foreground: oklch(0.95 0.01 75);
+  --primary: oklch(0.70 0.16 45);
+  --primary-foreground: oklch(0.18 0.015 50);
+  --secondary: oklch(0.28 0.015 50);
+  --secondary-foreground: oklch(0.95 0.01 75);
+  --muted: oklch(0.28 0.015 50);
+  --muted-foreground: oklch(0.65 0.015 60);
+  --accent: oklch(0.28 0.015 50);
+  --accent-foreground: oklch(0.95 0.01 75);
+  --destructive: oklch(0.50 0.18 25);
+  --destructive-foreground: oklch(0.95 0.01 75);
+  --border: oklch(0.30 0.015 50);
+  --input: oklch(0.28 0.015 50);
+  --ring: oklch(0.70 0.16 45);
+}
+
+@theme inline {
+  --font-sans: "Geist", "Geist Fallback";
+  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ========== Minimal UI Styles ========== */
+
+/* 콘텐츠 영역 최대 너비 */
+.content-narrow {
+  @apply max-w-[680px] mx-auto;
+}
+
+/* 섹션 구분선 */
+.section-divider {
+  @apply border-t border-border/50 my-8;
+}
+
+/* 읽기 최적화 타이포그래피 */
+.typography-reading {
+  @apply text-base leading-relaxed text-foreground/90;
+}
+
+/* 메타 정보 라인 */
+.meta-line {
+  @apply text-sm text-muted-foreground flex items-center gap-2 flex-wrap;
+}
+
+/* 미니멀 섹션 스타일 */
+.minimal-section {
+  @apply space-y-4;
+}
+
+/* 미니멀 제목 스타일 */
+.minimal-title {
+  @apply text-2xl font-bold leading-tight text-foreground;
+}
+
+/* 섹션 헤더 스타일 (미니멀) */
+.section-header {
+  @apply flex items-center gap-2 text-lg font-semibold text-foreground tracking-tight;
+}
+
+/* Collapsible 트리거 (미니멀 스타일) */
+.minimal-trigger {
+  @apply flex items-center gap-2 w-full text-left py-2 text-muted-foreground hover:text-foreground transition-colors;
+}
+
+/* Bullet point 리스트 */
+.bullet-list {
+  @apply space-y-3;
+}
+
+.bullet-item {
+  @apply flex gap-3 items-start;
+}
+
+.bullet-marker {
+  @apply w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-2;
+}
+
+/* 오디오 플레이어 미니멀 스타일 */
+.audio-player-minimal {
+  @apply flex items-center gap-4 py-4;
+}
+
+/* 입력 영역 컴팩트 스타일 */
+.input-compact {
+  @apply h-10 text-sm;
+}
+
+/* Shimmer 애니메이션 (Cursor 스타일) */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    var(--muted-foreground) 0%,
+    var(--muted-foreground) 35%,
+    var(--foreground) 50%,
+    var(--muted-foreground) 65%,
+    var(--muted-foreground) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  animation: shimmer 3.5s linear infinite;
+}
+
+/* 스피닝 애니메이션 */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin 1.5s linear infinite;
+}

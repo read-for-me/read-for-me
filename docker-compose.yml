@@ -1,0 +1,69 @@
+# ==============================================================================
+# Read-For-Me Docker Compose
+# ==============================================================================
+# 로컬 개발 및 테스트 환경 구성
+#
+# 사용법:
+#   모든 서비스 시작: docker compose up -d
+#   백엔드만 시작:    docker compose up -d backend
+#   Phoenix만 시작:   docker compose up -d phoenix
+#   로그 확인:        docker compose logs -f backend
+#   중지:             docker compose down
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # Backend API (FastAPI)
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8080"
+    environment:
+      # 기본 설정
+      - PROJECT_NAME=Read-For-Me
+      - VERSION=0.1.0
+      - API_V1_STR=/api/v1
+      # CORS (프론트엔드 URL)
+      - BACKEND_CORS_ORIGINS=http://localhost:3000
+      # Phoenix 연동
+      - PHOENIX_ENABLED=true
+      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix:6006/v1/traces
+      - PHOENIX_PROJECT_NAME=read-for-me
+      # Storage 설정 (로컬 테스트용)
+      - STORAGE_BACKEND=local
+      # Cloud Run 포트 시뮬레이션
+      - PORT=8080
+    env_file:
+      - ./backend/.env  # API 키 등 민감 정보는 .env 파일에서 로드
+    volumes:
+      # 로컬 데이터 디렉토리 마운트 (개발 중 데이터 확인용)
+      - ./backend/data:/app/data
+    depends_on:
+      - phoenix
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ----------------------------------------------------------------------------
+  # Phoenix LLMOps (Tracing & Monitoring)
+  # ----------------------------------------------------------------------------
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6006:6006"  # Phoenix UI + OTLP HTTP
+      - "4317:4317"  # OTLP gRPC
+    environment:
+      - PHOENIX_WORKING_DIR=/phoenix
+    volumes:
+      - phoenix_data:/phoenix
+    restart: unless-stopped
+
+volumes:
+  phoenix_data:

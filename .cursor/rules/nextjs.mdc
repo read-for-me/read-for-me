@@ -1,0 +1,58 @@
+---
+description: This rule explains Next.js conventions and best practices for fullstack development.
+globs: **/*.js,**/*.jsx,**/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# Next.js rules
+
+## Code Style and Structure
+
+### General Principles
+
+- Write concise, readable TypeScript code
+- Use functional and declarative programming patterns
+- Follow DRY (Don't Repeat Yourself) principle
+- Implement early returns for better readability
+- Structure components logically: exports, subcomponents, helpers, types
+
+### Naming Conventions
+
+- Use kebab-case for directory names (e.g., components/auth-form) and PascalCase for component files.
+- Use descriptive names with auxiliary verbs (isLoading, hasError)
+- Prefix event handlers with "handle" (handleClick, handleSubmit)
+- Prefer named exports over default exports, i.e. export function Button() { / ... / } instead of export default function Button() { / ... \*/ }.
+
+### TypeScript Usage
+
+- Use TypeScript for all code
+- Prefer interfaces over types
+- Avoid enums; use const maps instead
+- Implement proper type safety and inference
+- Use satisfies operator for type validation
+
+## React 19 and Next.js 15 Best Practices
+
+### Component Architecture
+
+- Use the App Router structure with page.tsx files in route directories.
+- Keep most components as React Server Components (RSC)
+- Client components must be explicitly marked with 'use client' at the top of the file.
+- Minimize 'use client' directives
+- Create small client component wrappers around interactive elements
+- Only use client components when you need interactivity and wrap in Suspense with fallback UI
+- Implement proper error boundaries
+- Use server components for data fetching
+- Use Suspense for async operations
+- Optimize for performance and Web Vitals
+
+### State Management
+
+- Avoid unnecessary useState and useEffect when possible
+- Use React Server Actions for form handling
+- Use URL search params for shareable state
+- Use nuqs for URL search param state management
+
+### Async Request APIs
+
+typescript // Always use async versions of runtime APIs const cookieStore = await cookies() const headersList = await headers() const { isEnabled } = await draftMode() // Handle async params in layouts/pages const params = await props.params const searchParams = await props.searchParams
