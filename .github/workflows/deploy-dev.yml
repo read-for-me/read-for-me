@@ -81,7 +81,8 @@ jobs:
             --min-instances 0 \
             --max-instances 3 \
             --env-vars-file /tmp/env-vars.yaml \
-            --set-secrets "OPENAI_API_KEY=openai-api-key:latest"
+            --set-secrets "OPENAI_API_KEY=openai-api-key:latest" \
+            --service-account readforme@gen-lang-client-0039052673.iam.gserviceaccount.com
 
       - name: Get Service URL
         run: |
