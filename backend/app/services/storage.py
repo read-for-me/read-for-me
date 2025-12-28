@@ -19,6 +19,8 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
+from google.auth import default as get_default_credentials
+from google.auth.transport import requests as auth_requests
 from google.cloud import storage as gcs
 from google.oauth2 import service_account
 from loguru import logger
@@ -366,17 +368,35 @@ class GCSStorageService:
         return matched_files
 
     async def get_download_url(self, path: str, expiry_minutes: int = 60) -> str:
-        """GCS Signed URL을 생성합니다."""
+        """
+        IAM Credentials API를 사용하여 GCS Signed URL을 생성합니다.
+
+        Cloud Run 환경에서는 서비스 계정 키 파일 없이도 IAM API를 통해
+        Signed URL을 생성할 수 있습니다.
+
+        요구 사항:
+        - 서비스 계정에 roles/iam.serviceAccountTokenCreator 권한 필요
+        """
         blob = self.bucket.blob(path)
 
-        # Signed URL 생성
+        # ADC에서 기본 자격 증명 가져오기
+        credentials, project = get_default_credentials()
+
+        # 토큰 갱신 (만료된 경우 대비)
+        auth_request = auth_requests.Request()
+        credentials.refresh(auth_request)
+
+        # service_account_email과 access_token을 제공하면
+        # IAM Credentials API를 사용하여 서명 생성 (키 파일 불필요)
         url = blob.generate_signed_url(
             version="v4",
             expiration=timedelta(minutes=expiry_minutes),
             method="GET",
+            service_account_email=credentials.service_account_email,
+            access_token=credentials.token,
         )
 
-        logger.debug(f"GCS: Signed URL 생성: {path} (만료: {expiry_minutes}분)")
+        logger.debug(f"GCS: Signed URL 생성 (IAM): {path} (만료: {expiry_minutes}분)")
         return url
 
     def exists(self, path: str) -> bool:
